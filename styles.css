@@ -1,0 +1,666 @@
+/* ============================================
+   LAST PROTOCOL - Cyber Command Interface
+   Color Palette:
+   - Background: #050505
+   - Primary UI: #00FFCC (Cyan)
+   - Alert/Hover: #FF0055 (Hot Pink)
+   - Secondary: #FFB800 (Amber)
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+canvas {
+    touch-action: none;
+}
+
+:root {
+    --bg-dark: #050505;
+    --cyber-cyan: #00FFCC;
+    --alert-pink: #FF0055;
+    --amber: #FFB800;
+    --text-white: #FFFFFF;
+    --text-gray: #888888;
+}
+
+body {
+    font-family: 'Roboto Mono', monospace;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* ============================================
+   SCANLINE & NOISE EFFECTS
+   ============================================ */
+
+.scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15) 1px,
+            transparent 1px,
+            transparent 2px);
+    animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(10px);
+    }
+}
+
+.noise {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.03;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /></filter><rect width="100%" height="100%" filter="url(%23noise)" /></svg>');
+    animation: noise 0.2s infinite;
+}
+
+@keyframes noise {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    10% {
+        transform: translate(-5%, -5%);
+    }
+
+    20% {
+        transform: translate(-10%, 5%);
+    }
+
+    30% {
+        transform: translate(5%, -10%);
+    }
+
+    40% {
+        transform: translate(-5%, 15%);
+    }
+
+    50% {
+        transform: translate(-10%, 5%);
+    }
+
+    60% {
+        transform: translate(15%, 0);
+    }
+
+    70% {
+        transform: translate(0, 10%);
+    }
+
+    80% {
+        transform: translate(-15%, 0);
+    }
+
+    90% {
+        transform: translate(10%, 5%);
+    }
+}
+
+/* ============================================
+   BOOT SEQUENCE
+   ============================================ */
+
+.boot-sequence {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-dark);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 50px;
+    transition: opacity 0.5s ease-out;
+}
+
+.boot-sequence.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.boot-text {
+    font-size: 14px;
+    color: var(--cyber-cyan);
+    text-align: left;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    text-shadow: 0 0 10px var(--cyber-cyan);
+}
+
+/* ============================================
+   MAIN MENU
+   ============================================ */
+
+.main-menu {
+    text-align: center;
+    z-index: 10;
+    max-width: 800px;
+    width: 100%;
+    padding: 40px;
+    position: relative;
+    transition: opacity 0.5s ease-in;
+}
+
+.main-menu.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ============================================
+   TITLE WITH GLITCH EFFECT
+   ============================================ */
+
+.title {
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--cyber-cyan);
+    margin-bottom: 10px;
+    text-shadow:
+        0 0 20px var(--cyber-cyan),
+        0 0 40px var(--cyber-cyan),
+        0 0 60px var(--cyber-cyan);
+    letter-spacing: 8px;
+    position: relative;
+    animation: flicker 3s infinite;
+}
+
+@keyframes flicker {
+
+    0%,
+    19%,
+    21%,
+    23%,
+    25%,
+    54%,
+    56%,
+    100% {
+        opacity: 1;
+        text-shadow:
+            0 0 20px var(--cyber-cyan),
+            0 0 40px var(--cyber-cyan),
+            0 0 60px var(--cyber-cyan);
+    }
+
+    20%,
+    24%,
+    55% {
+        opacity: 0.8;
+        text-shadow: none;
+    }
+}
+
+/* Glitch effect */
+.glitch {
+    position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 var(--alert-pink);
+    clip: rect(24px, 550px, 90px, 0);
+    animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+    left: -2px;
+    text-shadow: -2px 0 var(--cyber-cyan);
+    clip: rect(85px, 550px, 140px, 0);
+    animation: glitch-anim 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+    0% {
+        clip: rect(61px, 9999px, 90px, 0);
+    }
+
+    5% {
+        clip: rect(33px, 9999px, 65px, 0);
+    }
+
+    10% {
+        clip: rect(68px, 9999px, 23px, 0);
+    }
+
+    15% {
+        clip: rect(67px, 9999px, 84px, 0);
+    }
+
+    20% {
+        clip: rect(27px, 9999px, 61px, 0);
+    }
+
+    25% {
+        clip: rect(34px, 9999px, 54px, 0);
+    }
+
+    30% {
+        clip: rect(86px, 9999px, 40px, 0);
+    }
+
+    35% {
+        clip: rect(35px, 9999px, 78px, 0);
+    }
+
+    40% {
+        clip: rect(29px, 9999px, 88px, 0);
+    }
+
+    45% {
+        clip: rect(48px, 9999px, 27px, 0);
+    }
+
+    50% {
+        clip: rect(99px, 9999px, 60px, 0);
+    }
+
+    55% {
+        clip: rect(16px, 9999px, 45px, 0);
+    }
+
+    60% {
+        clip: rect(76px, 9999px, 34px, 0);
+    }
+
+    65% {
+        clip: rect(52px, 9999px, 72px, 0);
+    }
+
+    70% {
+        clip: rect(44px, 9999px, 19px, 0);
+    }
+
+    75% {
+        clip: rect(83px, 9999px, 56px, 0);
+    }
+
+    80% {
+        clip: rect(12px, 9999px, 92px, 0);
+    }
+
+    85% {
+        clip: rect(64px, 9999px, 38px, 0);
+    }
+
+    90% {
+        clip: rect(21px, 9999px, 81px, 0);
+    }
+
+    95% {
+        clip: rect(55px, 9999px, 47px, 0);
+    }
+
+    100% {
+        clip: rect(73px, 9999px, 15px, 0);
+    }
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--amber);
+    letter-spacing: 4px;
+    margin-bottom: 60px;
+    text-shadow: 0 0 10px var(--amber);
+}
+
+/* ============================================
+   MENU NAVIGATION
+   ============================================ */
+
+.menu-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 80px;
+}
+
+.menu-btn {
+    background: transparent;
+    border: 2px solid var(--cyber-cyan);
+    color: var(--text-white);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 18px;
+    padding: 15px 30px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow:
+        0 0 10px rgba(0, 255, 204, 0.3),
+        inset 0 0 10px rgba(0, 255, 204, 0.1);
+}
+
+.menu-btn:hover {
+    border-color: var(--alert-pink);
+    color: var(--alert-pink);
+    box-shadow:
+        0 0 20px rgba(255, 0, 85, 0.6),
+        inset 0 0 20px rgba(255, 0, 85, 0.2);
+    transform: translateX(10px);
+}
+
+.menu-btn:hover .btn-bracket {
+    color: var(--alert-pink);
+    text-shadow: 0 0 10px var(--alert-pink);
+}
+
+.menu-btn:active {
+    transform: translateX(10px) scale(0.98);
+}
+
+.btn-bracket {
+    color: var(--cyber-cyan);
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.btn-text {
+    margin: 0 10px;
+}
+
+/* ============================================
+   STATUS BAR
+   ============================================ */
+
+.status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 255, 204, 0.05);
+    border-top: 1px solid var(--cyber-cyan);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    z-index: 100;
+    box-shadow: 0 -5px 20px rgba(0, 255, 204, 0.2);
+}
+
+.status-item {
+    color: var(--text-gray);
+}
+
+.status-active {
+    color: var(--cyber-cyan);
+    text-shadow: 0 0 5px var(--cyber-cyan);
+}
+
+.status-warning {
+    color: var(--alert-pink);
+    text-shadow: 0 0 5px var(--alert-pink);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .title {
+        font-size: 48px;
+        letter-spacing: 4px;
+    }
+
+    .subtitle {
+        font-size: 10px;
+    }
+
+    .menu-btn {
+        font-size: 14px;
+        padding: 12px 20px;
+    }
+
+    .status-bar {
+        flex-direction: column;
+        gap: 5px;
+        font-size: 10px;
+    }
+}
+
+/* HUD Styles */
+.game-hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.hud-text {
+    font-family: 'Roboto Mono', monospace;
+    color: #00ffcc;
+    font-size: 18px;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border: 1px solid rgba(0, 255, 204, 0.3);
+}
+
+/* Breach Overlay */
+.breach-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    pointer-events: none;
+}
+
+.breach-content {
+    text-align: center;
+}
+
+.glitch.large {
+    font-size: 64px;
+    color: #00ffcc;
+}
+
+.subtitle.warning {
+    color: #ff3366;
+    margin-top: 10px;
+    font-size: 24px;
+    text-shadow: 0 0 15px rgba(255, 50, 100, 0.8);
+}
+
+/* Helper class */
+.hidden {
+    display: none !important;
+}
+
+/* ============================================
+   SETTINGS MODAL
+   ============================================ */
+
+.settings-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.settings-content {
+    background: rgba(0, 20, 20, 0.95);
+    border: 2px solid var(--cyber-cyan);
+    padding: 40px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
+    position: relative;
+}
+
+.settings-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--cyber-cyan);
+    box-shadow: 0 0 15px var(--cyber-cyan);
+}
+
+.settings-title {
+    color: var(--cyber-cyan);
+    font-size: 24px;
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    font-size: 16px;
+    color: var(--text-white);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border: 1px solid #555;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: rgba(0, 255, 204, 0.2);
+    border-color: var(--cyber-cyan);
+}
+
+input:checked+.slider:before {
+    transform: translateX(30px);
+    background-color: var(--cyber-cyan);
+    box-shadow: 0 0 10px var(--cyber-cyan);
+}
+
+/* Danger Button */
+.danger-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--alert-pink);
+    color: var(--alert-pink);
+    padding: 10px;
+    font-family: 'Roboto Mono', monospace;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.danger-btn:hover {
+    background: rgba(255, 0, 85, 0.1);
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+}
+
+.menu-btn.small {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+/* Low Graphics Mode */
+body.low-graphics .scanlines,
+body.low-graphics .noise {
+    display: none !important;
+}
+
+body.low-graphics .title {
+    text-shadow: none !important;
+    animation: none !important;
+}

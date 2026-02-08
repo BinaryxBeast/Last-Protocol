@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAST PROTOCOL - Command Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Scanline overlay for CRT effect (CSS based for Menu) -->
+    <div class="scanlines"></div>
+
+    <!-- Noise/static background -->
+    <div class="noise"></div>
+
+    <!-- Boot sequence overlay -->
+    <div id="bootSequence" class="boot-sequence">
+        <div class="boot-text"></div>
+    </div>
+
+    <!-- In-Game HUD -->
+    <div id="gameHud" class="game-hud hidden">
+        <div id="levelHud" class="hud-text">PROTOCOL LEVEL: 1</div>
+    </div>
+
+    <!-- System Breach Overlay -->
+    <div id="breachOverlay" class="breach-overlay hidden">
+        <div class="breach-content">
+            <h1 class="glitch large" data-text="SYSTEM BREACHED">SYSTEM BREACHED</h1>
+            <div id="breachLevelText" class="subtitle warning">SECURITY LAYER 1 COMPROMISED</div>
+        </div>
+    </div>
+
+    <!-- Main menu container -->
+    <div id="mainMenu" class="main-menu hidden">
+        <!-- Glitch effect title -->
+        <h1 class="title glitch" data-text="LAST PROTOCOL">LAST PROTOCOL</h1>
+        <div class="subtitle">SYSTEM OVERRIDE ACTIVE // PROTOCOL 00</div>
+
+        <!-- Menu options -->
+        <nav class="menu-nav">
+            <button class="menu-btn" data-action="start">
+                <span class="btn-bracket">[</span>
+                <span class="btn-text">INITIATE MISSION</span>
+                <span class="btn-bracket">]</span>
+            </button>
+
+            <button class="menu-btn" data-action="scores">
+                <span class="btn-bracket">[</span>
+                <span class="btn-text">ARCHIVED DATA (SCORES)</span>
+                <span class="btn-bracket">]</span>
+            </button>
+
+            <button class="menu-btn" data-action="settings">
+                <span class="btn-bracket">[</span>
+                <span class="btn-text">SYSTEM CONFIGURATION</span>
+                <span class="btn-bracket">]</span>
+            </button>
+
+            <button class="menu-btn" data-action="exit">
+                <span class="btn-bracket">[</span>
+                <span class="btn-text">TERMINATE SESSION</span>
+                <span class="btn-bracket">]</span>
+            </button>
+        </nav>
+
+        <!-- Status bar at bottom -->
+        <div class="status-bar">
+            <span class="status-item">STATUS: <span class="status-active">ONLINE</span></span>
+            <span class="status-item">SECURITY: <span class="status-warning">COMPROMISED</span></span>
+            <span class="status-item">TIME: <span id="systemTime">00:00:00</span></span>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="settings-modal hidden">
+        <div class="settings-content">
+            <h2 class="settings-title">SYSTEM CONFIGURATION</h2>
+
+            <div class="setting-item">
+                <span class="setting-label">AUDIO PROTOCOLS</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="audioToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <span class="setting-label">VISUAL ENHANCEMENTS</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="graphicsToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <button id="dataWipeBtn" class="danger-btn">
+                    <span class="btn-bracket">[</span>
+                    <span class="btn-text">PURGE ARCHIVED DATA</span>
+                    <span class="btn-bracket">]</span>
+                </button>
+            </div>
+
+            <button id="closeSettingsBtn" class="menu-btn small">
+                <span class="btn-bracket">
+                    << /span>
+                        <span class="btn-text">RETURN</span>
+                        <span class="btn-bracket">></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="ambientLoop" loop>
+        <source src="assets/ambient.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="hoverSound">
+        <source src="assets/click.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="selectSound">
+        <source src="assets/select.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="alarmSound">
+        <source src="assets/alarm.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="collectSound">
+        <source src="assets/collect.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Game Engine & Libraries -->
+    <script src="engine.js"></script>
+    <script src="lib/easystar.js"></script>
+    <script src="game.js"></script>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
