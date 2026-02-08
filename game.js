@@ -11,6 +11,7 @@ class Assassin {
 
         // Movement Physics
         this.velocity = { x: 0, y: 0 };
+        this.inputVelocity = { x: 0, y: 0 }; // Added for manual input
         this.acceleration = 1500; // Pixel/s^2
         this.friction = 0.92;     // High friction for snappy stop
         this.maxSpeed = 220;      // Normal run speed
@@ -44,7 +45,7 @@ class Assassin {
         this.path = []; // Ignore pathfinding, go straight
     }
 
-    update(dt) {
+    update(dt, maze) { // Added maze for collision
         if (this.state === 'DEAD') return;
 
         const dtSec = dt / 1000;
@@ -75,7 +76,12 @@ class Assassin {
             }
 
         } else if (this.state === 'MOVING') {
-            if (this.path.length > 0) {
+            // Check for manual input override first
+            if (this.inputVelocity.x !== 0 || this.inputVelocity.y !== 0) {
+                this.state = 'IDLE'; // Break pathfinding
+                this.path = [];
+            }
+            else if (this.path.length > 0) {
                 // Get current target node
                 const target = this.path[this.pathIndex];
                 const targetX = target.x * this.gridSize + this.gridSize / 2;
@@ -114,13 +120,44 @@ class Assassin {
                 this.velocity.y = 0;
             }
 
-            // Apply movement directly
-            this.x += this.velocity.x * dtSec;
-            this.y += this.velocity.y * dtSec;
+            // Apply manual input if not pathfinding/lunging
+            if (this.state === 'IDLE' || this.state === 'MANUAL_MOVE') {
+                if (this.inputVelocity.x !== 0 || this.inputVelocity.y !== 0) {
+                    this.state = 'MANUAL_MOVE';
+                    this.velocity.x = this.inputVelocity.x;
+                    this.velocity.y = this.inputVelocity.y;
+                    this.angle = Math.atan2(this.velocity.y, this.velocity.x);
+                } else {
+                    this.velocity.x = 0;
+                    this.velocity.y = 0;
+                    if (this.state === 'MANUAL_MOVE') this.state = 'IDLE';
+                }
+            }
+
+            // Proposed next position
+            let nextX = this.x + this.velocity.x * dtSec;
+            let nextY = this.y + this.velocity.y * dtSec;
+
+            // Collision Detection for Manual Movement
+            if (this.state === 'MANUAL_MOVE' && maze) {
+                // Check X axis
+                if (!this.checkCollision(nextX, this.y, maze)) {
+                    this.x = nextX;
+                }
+                // Check Y axis
+                if (!this.checkCollision(this.x, nextY, maze)) {
+                    this.y = nextY;
+                }
+            } else {
+                // Standard movement for pathfinding/lunging (assumes valid path)
+                this.x = nextX;
+                this.y = nextY;
+            }
         }
 
         // --- FOOTSTEP RINGS ---
-        if (this.state === 'MOVING' || this.state === 'ASSASSINATING') {
+        // --- FOOTSTEP RINGS ---
+        if (this.state === 'MOVING' || this.state === 'ASSASSINATING' || this.state === 'MANUAL_MOVE') {
             const speed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
             if (speed > 50) {
                 this.footstepTimer += dt;
@@ -135,6 +172,30 @@ class Assassin {
                 }
             }
         }
+    }
+
+    checkCollision(x, y, maze) {
+        // Simple bounding circle/box check against grid
+        const radius = 10; // Collision radius
+        const checks = [
+            { x: x, y: y }, // Center
+            { x: x + radius, y: y },
+            { x: x - radius, y: y },
+            { x: x, y: y + radius },
+            { x: x, y: y - radius }
+        ];
+
+        for (const p of checks) {
+            const gx = Math.floor(p.x / this.gridSize);
+            const gy = Math.floor(p.y / this.gridSize);
+
+            // Bounds check
+            if (gy < 0 || gy >= maze.length || gx < 0 || gx >= maze[0].length) return true;
+
+            // Wall check
+            if (maze[gy][gx] === 1) return true;
+        }
+        return false;
     }
 
     render(ctx) {
@@ -973,6 +1034,65 @@ class GamePlay extends AG.Scene {
 
         this.score = 0;
         this.isTransitioning = false;
+
+        // 11. Background Music
+        if (window.backgroundMusic) {
+            this.music = window.backgroundMusic;
+        } else {
+            // Fallback if game started directly without menu
+            this.music = new AG.Audio('assets/music.wav', true, 0.5);
+            window.backgroundMusic = this.music;
+        }
+
+        if (this.music.audio.paused) {
+            this.music.play();
+        }
+
+        this.musicPlaying = !this.music.audio.paused;
+
+        this.music.audio.addEventListener('playing', () => {
+            this.musicPlaying = true;
+            console.log("Music confirmed playing");
+        });
+
+        this.music.audio.addEventListener('pause', () => {
+            this.musicPlaying = false;
+        });
+
+        // Resume audio context on user interaction (persist until success)
+        const resumeAudio = () => {
+            if (this.music.audio.paused) {
+                this.music.play();
+            }
+        };
+
+        window.addEventListener('click', resumeAudio);
+        window.addEventListener('keydown', resumeAudio);
+
+        // Input State for Arrow Keys
+        this.cursors = {
+            up: false, down: false, left: false, right: false
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') this.cursors.up = true;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') this.cursors.down = true;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') this.cursors.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.cursors.right = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') this.cursors.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') this.cursors.down = false;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') this.cursors.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.cursors.right = false;
+        });
+
+        // Remove listeners once we know it's playing
+        this.music.audio.addEventListener('playing', () => {
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('keydown', resumeAudio);
+        });
     }
 
     updateDifficultyStats() {
@@ -1168,7 +1288,24 @@ class GamePlay extends AG.Scene {
         // Update player movement
         if (this.player) {
             this.player.scene = this; // Ensure scene reference is set
-            this.player.update(dt);
+
+            // Process Input
+            this.player.inputVelocity.x = 0;
+            this.player.inputVelocity.y = 0;
+            const speed = this.player.maxSpeed;
+
+            if (this.cursors.up) this.player.inputVelocity.y = -speed;
+            if (this.cursors.down) this.player.inputVelocity.y = speed;
+            if (this.cursors.left) this.player.inputVelocity.x = -speed;
+            if (this.cursors.right) this.player.inputVelocity.x = speed;
+
+            // Normalize diagonal
+            if (this.player.inputVelocity.x !== 0 && this.player.inputVelocity.y !== 0) {
+                this.player.inputVelocity.x *= 0.707;
+                this.player.inputVelocity.y *= 0.707;
+            }
+
+            this.player.update(dt, this.maze);
         }
 
         // Update ghosts
@@ -1394,7 +1531,7 @@ class GamePlay extends AG.Scene {
         // Background panel
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.beginPath();
-        ctx.roundRect(10, 10, 180, 75, 5);
+        ctx.roundRect(10, 10, 180, 95, 5); // Increased height
         ctx.fill();
         ctx.strokeStyle = 'rgba(0, 255, 204, 0.4)';
         ctx.lineWidth = 1;
@@ -1413,6 +1550,12 @@ class GamePlay extends AG.Scene {
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#ff3333';
         ctx.fillText(`TARGETS: ${this.robots.length}`, 22, 63);
+
+        // Music Status
+        ctx.font = '14px "Roboto Mono", monospace';
+        ctx.fillStyle = this.musicPlaying ? '#00ffcc' : '#888888';
+        ctx.shadowBlur = this.musicPlaying ? 8 : 0;
+        ctx.fillText(`MUSIC: ${this.musicPlaying ? 'ON' : 'OFF'}`, 22, 88);
 
         // Level indicator
         ctx.fillStyle = '#ffcc00';

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Test</title>
+</head>
+<body>
+    <h1>Audio Test</h1>
+    <p>Click the button below to test audio playback.</p>
+    <button id="playBtn">PLAY MUSIC.WAV</button>
+    <p id="status">Status: Waiting...</p>
+    <audio id="testAudio" src="assets/music.wav" controls></audio>
+    <script>
+        const btn = document.getElementById('playBtn');
+        const status = document.getElementById('status');
+        const audio = document.getElementById('testAudio');
+
+        btn.addEventListener('click', () => {
+            status.textContent = "Status: Attempting to play...";
+            audio.play()
+                .then(() => {
+                    status.textContent = "Status: Playing!";
+                    console.log("Audio playing successfully");
+                })
+                .catch(e => {
+                    status.textContent = "Status: Error - " + e.message;
+                    console.error("Audio error:", e);
+                });
+        });
+
+        audio.addEventListener('error', (e) => {
+            status.textContent = "Status: Error loading file info - " + audio.error.code;
+            console.error("Audio error:", audio.error);
+        });
+    </script>
+</body>
+</html>

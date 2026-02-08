@@ -82,10 +82,40 @@ function startBootSequence() {
                     bootSequence.style.display = 'none';
                     mainMenu.classList.remove('hidden');
                     startAmbientSound();
+                    startMusic(); // Start the main theme
                 }, 500);
             }, 1000);
         }
     }, 150); // Speed of boot text appearance
+}
+
+// Start Main Theme Music
+function startMusic() {
+    if (!window.backgroundMusic) {
+        // Create global music instance
+        window.backgroundMusic = new AG.Audio('assets/music.wav', true, 0.5);
+    }
+
+    // Attempt play
+    window.backgroundMusic.play();
+
+    // Setup user interaction fallback for autoplay policies
+    const resumeAudio = () => {
+        if (window.backgroundMusic && window.backgroundMusic.audio.paused) {
+            window.backgroundMusic.play();
+        }
+    };
+
+    window.addEventListener('click', resumeAudio);
+    window.addEventListener('keydown', resumeAudio);
+
+    // cleanup listeners if playing
+    if (window.backgroundMusic.audio) {
+        window.backgroundMusic.audio.addEventListener('playing', () => {
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('keydown', resumeAudio);
+        });
+    }
 }
 
 // Setup event listeners for menu buttons
@@ -221,10 +251,20 @@ function toggleAudio(enabled) {
     audios.forEach(audio => {
         audio.muted = !enabled;
     });
+
+    // Also toggle the global background music
+    if (window.backgroundMusic && window.backgroundMusic.audio) {
+        window.backgroundMusic.audio.muted = !enabled;
+    }
+
     if (enabled) {
         if (ambientLoop.paused) ambientLoop.play().catch(() => { });
+        if (window.backgroundMusic && window.backgroundMusic.audio.paused) {
+            window.backgroundMusic.play();
+        }
     } else {
         ambientLoop.pause();
+        if (window.backgroundMusic) window.backgroundMusic.stop(); // or pause
     }
 }
 

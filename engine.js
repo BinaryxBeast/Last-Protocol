@@ -329,6 +329,41 @@ const AG = {
         }
     },
 
+    // --- Audio System ---
+    Audio: class {
+        constructor(url, loop = false, volume = 0.5) {
+            this.url = url;
+            this.loop = loop;
+            this.volume = volume;
+            this.audio = new Audio(url);
+            this.audio.loop = loop;
+            this.audio.volume = volume;
+        }
+
+        play() {
+            // Don't reset currentTime here, allow resume
+            const promise = this.audio.play();
+            if (promise !== undefined) {
+                promise.then(() => {
+                    console.log("Audio playing: " + this.url);
+                }).catch(error => {
+                    console.warn("Audio playback prevented. Waiting for user interaction...", error);
+                });
+            }
+        }
+
+        stop() {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+        }
+
+        // Add volume control
+        setVolume(v) {
+            this.volume = Math.max(0, Math.min(1, v));
+            this.audio.volume = this.volume;
+        }
+    },
+
     Tween: class {
         constructor(config) {
             this.targets = config.targets;
