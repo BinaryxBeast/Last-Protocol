@@ -37,6 +37,10 @@ let dataWipeBtn;
 let closeSettingsBtn;
 let alarmSound;
 let collectSound;
+let scoresModal;
+let highLevelDisplay;
+let highScoreDisplay;
+let closeScoresBtn;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,6 +66,12 @@ function initializeElements() {
     closeSettingsBtn = document.getElementById('closeSettingsBtn');
     alarmSound = document.getElementById('alarmSound');
     collectSound = document.getElementById('collectSound');
+
+    // Scores Modal Elements
+    scoresModal = document.getElementById('scoresModal');
+    highLevelDisplay = document.getElementById('highLevelDisplay');
+    highScoreDisplay = document.getElementById('highScoreDisplay');
+    closeScoresBtn = document.getElementById('closeScoresBtn');
 }
 
 // Boot sequence animation
@@ -73,6 +83,11 @@ function startBootSequence() {
         if (currentLine < bootMessages.length) {
             currentText += bootMessages[currentLine] + '\n';
             bootText.textContent = currentText;
+            if (AG && AG.SFX) {
+                // Every 10th char slightly distorted
+                const isDistorted = (currentText.length % 10 === 0);
+                AG.SFX.playTypewriter(isDistorted);
+            }
             currentLine++;
         } else {
             clearInterval(typeInterval);
@@ -123,7 +138,8 @@ function setupEventListeners() {
     menuButtons.forEach(button => {
         // Hover effects
         button.addEventListener('mouseenter', () => {
-            playSound(hoverSound);
+            // Use new procedural click sound
+            if (AG && AG.SFX) AG.SFX.playClick();
             const text = button.querySelector('.btn-text');
             text.textContent = `> ${text.textContent} <`;
         });
@@ -135,7 +151,8 @@ function setupEventListeners() {
 
         // Click handlers
         button.addEventListener('click', () => {
-            playSound(selectSound);
+            // Use new procedural select sound
+            if (AG && AG.SFX) AG.SFX.playSelect();
             handleMenuAction(button.dataset.action);
         });
     });
@@ -143,8 +160,15 @@ function setupEventListeners() {
     // Settings Event Listeners
     if (closeSettingsBtn) {
         closeSettingsBtn.addEventListener('click', () => {
-            playSound(selectSound);
+            if (AG && AG.SFX) AG.SFX.playSelect();
             hideSettings();
+        });
+    }
+
+    if (closeScoresBtn) {
+        closeScoresBtn.addEventListener('click', () => {
+            if (AG && AG.SFX) AG.SFX.playSelect();
+            hideScores();
         });
     }
 
@@ -230,8 +254,18 @@ function transitionToGame() {
 
 // Show scores screen
 function showScores() {
-    const highScore = localStorage.getItem('lastProtocol_highLevel') || 'NONE';
-    alert(`ARCHIVED DATA\n\nHIGHEST PROTOCOL LEVEL: ${highScore}`);
+    scoresModal.classList.remove('hidden');
+
+    // Load current state
+    const highLevel = localStorage.getItem('lastProtocol_highLevel') || 'NONE';
+    const highScore = localStorage.getItem('lastProtocol_highScore') || '0';
+
+    if (highLevelDisplay) highLevelDisplay.textContent = highLevel === 'NONE' ? 'NONE' : `LEVEL ${highLevel}`;
+    if (highScoreDisplay) highScoreDisplay.textContent = highScore;
+}
+
+function hideScores() {
+    scoresModal.classList.add('hidden');
 }
 
 // Show settings screen
@@ -258,12 +292,15 @@ function toggleAudio(enabled) {
     }
 
     if (enabled) {
-        if (ambientLoop.paused) ambientLoop.play().catch(() => { });
+        if (AG && AG.SFX && AG.SFX.ctx) AG.SFX.ctx.resume();
+        if (AG && AG.SFX) AG.SFX.startAmbient();
+
         if (window.backgroundMusic && window.backgroundMusic.audio.paused) {
             window.backgroundMusic.play();
         }
     } else {
-        ambientLoop.pause();
+        if (AG && AG.SFX && AG.SFX.ctx) AG.SFX.ctx.suspend();
+
         if (window.backgroundMusic) window.backgroundMusic.stop(); // or pause
     }
 }
@@ -279,6 +316,7 @@ function toggleGraphics(enabled) {
 function performDataWipe() {
     if (confirm('WARNING: THIS WILL PERMANENTLY DELETE ALL PROGRESS.\n\nAre you sure you want to proceed?')) {
         localStorage.removeItem('lastProtocol_highLevel');
+        localStorage.removeItem('lastProtocol_highScore');
         alert('SYSTEM PURGED. ARCHIVES CLEARED.');
     }
 }
@@ -306,15 +344,9 @@ function playSound(audioElement) {
 
 // Start ambient background sound
 function startAmbientSound() {
-    if (ambientLoop) {
-        ambientLoop.volume = 0.3;
-        ambientLoop.play().catch(err => {
-            console.log('Ambient sound autoplay prevented:', err);
-            // Add click-to-enable audio if needed
-            document.addEventListener('click', () => {
-                ambientLoop.play().catch(() => { });
-            }, { once: true });
-        });
+    // legacy element handling removed or purely fallback
+    if (AG && AG.SFX) {
+        AG.SFX.startAmbient();
     }
 }
 

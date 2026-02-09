@@ -523,7 +523,7 @@ class SoundPulse {
             const dy = robot.y - this.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < this.maxRadius && robot.state !== 'ALERT') {
+            if (dist < this.maxRadius && robot.state !== 'CHASE') {
                 robot.investigate(this.x, this.y, maze, finder);
             }
         }
@@ -544,54 +544,156 @@ class SoundPulse {
 }
 
 // ============================================
-// BLOOD SPLATTER - Floor Impact Effect
+// EXPLOSION EFFECT - Robot Destruction
 // ============================================
-class BloodSplatter {
+class Explosion {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.particles = [];
-        this.alpha = 1;
+        this.timer = 0;
+        this.maxDuration = 500; // ms
         this.complete = false;
 
-        // Generate splatter particles outward
-        for (let i = 0; i < 10; i++) {
-            const angle = (Math.PI * 2 / 10) * i + (Math.random() - 0.5) * 0.5;
-            const dist = 12 + Math.random() * 25;
+        // Particle sparks
+        this.particles = [];
+        for (let i = 0; i < 16; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 50 + Math.random() * 150;
             this.particles.push({
-                x: Math.cos(angle) * dist,
-                y: Math.sin(angle) * dist,
-                size: 3 + Math.random() * 5
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.0,
+                color: Math.random() > 0.5 ? '#ffaa00' : '#ff5500' // Orange/Red sparks
             });
         }
     }
 
     update(dt) {
-        // Fade very slowly (stays on floor for ~15 seconds)
-        this.alpha -= dt / 15000;
-        if (this.alpha <= 0) this.complete = true;
+        this.timer += dt;
+        if (this.timer >= this.maxDuration) {
+            this.complete = true;
+        }
+
+        // Update particles
+        for (const p of this.particles) {
+            p.x += p.vx * (dt / 1000);
+            p.y += p.vy * (dt / 1000);
+            p.life -= dt / 400; // Fade out
+        }
+    }
+
+    render(ctx) {
+        if (this.complete) return;
+
+        const progress = this.timer / this.maxDuration;
+        const radius = 5 + progress * 40; // Expanding circle
+        const alpha = 1 - progress;
+
+        ctx.save();
+
+        // Main explosion blast
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 100, 0, ${alpha})`;
+        ctx.fill();
+
+        // Inner core
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, radius * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 100, ${alpha})`;
+        ctx.fill();
+
+        // Draw sparks
+        for (const p of this.particles) {
+            if (p.life > 0) {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        ctx.restore();
+    }
+}
+
+// ============================================
+// LEAK PARTICLE - Dynamic Fluid Simulation
+// ============================================
+class Leak {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+
+        // Random velocity for the "splash"
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 150 + 50; // Faster splash
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+
+        this.radius = Math.random() * 3 + 2;
+        this.friction = 0.92; // Gradually slows down
+
+        // Colors based on type
+        if (this.type === 'oil') {
+            this.color = '#111111'; // Deep black/oil
+            this.shadowColor = null; // Matte
+            this.shadowBlur = 0;
+        } else {
+            this.color = '#00f2ff'; // Neon Cyan/Coolant
+            this.shadowColor = '#00f2ff';
+            this.shadowBlur = 10;
+        }
+
+        this.stopped = false;
+        this.isPuddle = false;
+
+        // Slightly flatten radius for puddle look (pre-calculate)
+        this.radiusX = this.radius;
+        this.radiusY = this.radius;
+    }
+
+    update(dt) {
+        const dtSec = dt / 1000;
+
+        if (!this.stopped) {
+            this.x += this.vx * dtSec;
+            this.y += this.vy * dtSec;
+            this.vx *= this.friction;
+            this.vy *= this.friction;
+
+            // If it slows down enough, it "hits the floor"
+            if (Math.abs(this.vx) < 5 && Math.abs(this.vy) < 5) {
+                this.stopped = true;
+                this.isPuddle = true;
+                this.radiusX = this.radius * 2;
+                this.radiusY = this.radius;
+            }
+        }
     }
 
     render(ctx) {
         ctx.save();
-        ctx.globalAlpha = this.alpha;
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = this.color;
 
-        // Dark red/oil color for robot "blood"
-        ctx.fillStyle = '#550000';
-
-        // Draw splatter blobs
-        for (const p of this.particles) {
-            ctx.beginPath();
-            ctx.arc(this.x + p.x, this.y + p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
+        if (this.shadowBlur > 0) {
+            ctx.shadowColor = this.shadowColor;
+            ctx.shadowBlur = this.shadowBlur;
         }
 
-        // Center pool (larger)
-        ctx.fillStyle = '#330000';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
+        // Use an ellipse for puddles to give them a flat look
+        if (this.isPuddle) {
+            ctx.ellipse(this.x, this.y, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
+        } else {
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        }
         ctx.fill();
-
         ctx.restore();
     }
 }
@@ -800,12 +902,13 @@ class RobotAgent {
         this.isDetecting = this.checkPlayerDetection(player);
 
         if (this.isDetecting) {
-            // ALERT: Stop and track player
-            if (this.state !== 'ALERT' && AG && AG.SFX) AG.SFX.playAlert();
-            this.state = 'ALERT';
+            // CHASE: Stop and track player
+            if (this.state !== 'CHASE' && AG && AG.SFX) AG.SFX.playAlert();
+            this.state = 'CHASE';
             this.angle = Math.atan2(player.y - this.y, player.x - this.x);
             this.path = []; // Clear patrol path
-        } else if (this.state === 'ALERT') {
+            this.target = null; // Clear investigation target
+        } else if (this.state === 'CHASE') {
             // Lost sight of player, return to patrol
             this.resetIdle();
         }
@@ -816,22 +919,37 @@ class RobotAgent {
             if (this.idleTimer >= this.idleDuration) {
                 this.startPatrol(maze, finder);
             }
-        } else if (this.state === 'PATROL') {
-            this.moveAlongPath(dt);
-        } else if (this.state === 'INVESTIGATE') {
-            // Move to investigation point, then look around
-            if (this.path.length > 0 && this.pathIndex < this.path.length) {
-                this.moveAlongPath(dt);
-            } else {
-                // Arrived at investigation point, look around
-                this.investigateTimer -= dt;
-                this.angle += 2 * (dt / 1000); // Slowly rotate looking
-                if (this.investigateTimer <= 0) {
-                    this.resetIdle();
+
+            // Random Idle Chatter
+            if (Math.random() < 0.01) { // 1% chance per frame (~once every 1.5s approx at 60fps)
+                if (AG && AG.SFX) {
+                    const dist = Math.sqrt((player.x - this.x) ** 2 + (player.y - this.y) ** 2);
+                    // Simple line of sight check for muffling would be expensive, 
+                    // so let's just use distance + maybe wall check if very close?
+                    // For now, just distance based muffling logic in engine is fine, 
+                    // but let's pass specific "muffled" flag if not detecting
+                    const isMuffled = !this.isDetecting && dist > 100;
+                    AG.SFX.playChatter(dist, isMuffled);
                 }
             }
+        } else if (this.state === 'PATROL') {
+            if (this.followPath(dt)) {
+                this.resetIdle();
+            }
+        } else if (this.state === 'SUSPICIOUS') {
+            const finishedPath = this.followPath(dt);
+
+            // Countdown the suspicion
+            this.suspicionTimer -= dt;
+
+            // Check if reached destination OR timer ran out
+            if (finishedPath || this.suspicionTimer <= 0) {
+                // Look around behavior could go here (e.g., rotate left/right)
+                // For now, return to patrol/idle
+                this.resetIdle();
+            }
         }
-        // ALERT state: robot stays still, tracking player (handled above)
+        // CHASE state: robot stays still, tracking player (handled above)
     }
 
     startPatrol(maze, finder) {
@@ -864,10 +982,9 @@ class RobotAgent {
         }
     }
 
-    moveAlongPath(dt) {
+    followPath(dt) {
         if (this.path.length === 0 || this.pathIndex >= this.path.length) {
-            this.resetIdle();
-            return;
+            return true;
         }
 
         const target = this.path[this.pathIndex];
@@ -879,16 +996,29 @@ class RobotAgent {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance > 5) {
-            this.angle = Math.atan2(dy, dx);
+            // Smoothly rotate towards target
+            const desiredAngle = Math.atan2(dy, dx);
+            let angleDiff = desiredAngle - this.angle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+            // Turn speed
+            const turnSpeed = 10;
+            if (Math.abs(angleDiff) > 0.1) {
+                this.angle += Math.sign(angleDiff) * turnSpeed * (dt / 1000);
+            } else {
+                this.angle = desiredAngle;
+            }
+
+            // Move
             this.x += Math.cos(this.angle) * this.speed * (dt / 1000);
             this.y += Math.sin(this.angle) * this.speed * (dt / 1000);
+            return false;
         } else {
             this.gridX = target.x;
             this.gridY = target.y;
             this.pathIndex++;
-            if (this.pathIndex >= this.path.length) {
-                this.resetIdle();
-            }
+            return this.pathIndex >= this.path.length;
         }
     }
 
@@ -897,24 +1027,37 @@ class RobotAgent {
         this.idleTimer = 0;
         this.idleDuration = 2000 + Math.random() * 1000;
         this.path = [];
+        this.target = null;
     }
 
     // Called when a nearby robot dies - go investigate
     investigate(targetX, targetY, maze, finder) {
-        this.state = 'INVESTIGATE';
-        this.investigateTimer = 2500; // Look around for 2.5s
-        this.path = [];
+        // Only investigate if not already chasing the player
+        if (this.state !== 'CHASE') {
+            // Calculate grid coordinates for target
+            const startNodeX = this.gridX;
+            const startNodeY = this.gridY;
+            const endNodeX = Math.floor(targetX / this.gridSize);
+            const endNodeY = Math.floor(targetY / this.gridSize);
 
-        const targetGridX = Math.floor(targetX / this.gridSize);
-        const targetGridY = Math.floor(targetY / this.gridSize);
-
-        finder.findPath(this.gridX, this.gridY, targetGridX, targetGridY, (path) => {
-            if (path && path.length > 0) {
-                this.path = path;
-                this.pathIndex = 0;
-            }
-        });
-        finder.calculate();
+            // Find path to the suspicion point
+            finder.findPath(startNodeX, startNodeY, endNodeX, endNodeY, (path) => {
+                if (path && path.length > 0) {
+                    this.state = 'SUSPICIOUS';
+                    this.target = { x: targetX, y: targetY };
+                    this.suspicionTimer = 5000; // 5 seconds investigation time
+                    this.path = path;
+                    this.pathIndex = 0;
+                    console.log("Robot entering SUSPICIOUS state with path");
+                    if (AG && AG.SFX) AG.SFX.playSuspicion();
+                } else {
+                    // If no path found (unreachable), maybe just look towards it?
+                    // For now, just ignore or stay idle
+                    console.log("Robot heard noise but cannot reach it");
+                }
+            });
+            finder.calculate();
+        }
     }
 
     // ========== RENDERING ==========
@@ -936,6 +1079,11 @@ class RobotAgent {
             gradient.addColorStop(0, 'rgba(255, 80, 80, 0.5)');
             gradient.addColorStop(0.5, 'rgba(255, 50, 50, 0.3)');
             gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        } else if (this.state === 'SUSPICIOUS') {
+            // Suspicious mode - Orange gradient
+            gradient.addColorStop(0, 'rgba(255, 165, 0, 0.45)');
+            gradient.addColorStop(0.6, 'rgba(255, 140, 0, 0.25)');
+            gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
         } else {
             // Patrol mode - bright yellow flashlight
             gradient.addColorStop(0, 'rgba(255, 255, 150, 0.45)');
@@ -954,9 +1102,12 @@ class RobotAgent {
         ctx.fill();
 
         // Edge glow outline for visibility
-        ctx.strokeStyle = this.isDetecting
-            ? 'rgba(255, 100, 100, 0.6)'
-            : 'rgba(255, 255, 150, 0.5)';
+        let strokeColor;
+        if (this.isDetecting) strokeColor = 'rgba(255, 100, 100, 0.6)';
+        else if (this.state === 'SUSPICIOUS') strokeColor = 'rgba(255, 165, 0, 0.6)';
+        else strokeColor = 'rgba(255, 255, 150, 0.5)';
+
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -966,10 +1117,16 @@ class RobotAgent {
     render(ctx) {
         ctx.save();
         ctx.translate(this.x, this.y);
+        // Draw Suspicion Indicator first (above head, so before rotation if we want it upright, 
+        // or effectively we draw it relative to world or robot)
+        // Let's draw it relative to robot but counter-rotated so it stays upright?
+        // Actually easier to just draw it after restore if we want it absolute up,
+        // but let's stick to local for now.
+
         ctx.rotate(this.angle + Math.PI / 2);
 
         // Leg animation (oscillate when patrolling)
-        const isWalking = this.state === 'PATROLLING' || this.state === 'INVESTIGATING';
+        const isWalking = this.state === 'PATROL' || this.state === 'SUSPICIOUS';
         const legOffset = isWalking ? Math.sin(Date.now() / 100) * 3 : 0;
 
         // Shadow beneath
@@ -991,12 +1148,21 @@ class RobotAgent {
         ctx.fill();
 
         // Armored body (rectangular torso)
-        const bodyColor = this.isDetecting ? '#ff2222' : '#cc3333';
-        const armorColor = this.isDetecting ? '#aa0000' : '#882222';
+        let bodyColor, armorColor;
+        if (this.isDetecting) {
+            bodyColor = '#ff2222';
+            armorColor = '#aa0000';
+        } else if (this.state === 'SUSPICIOUS') {
+            bodyColor = '#ff8800'; // Orange
+            armorColor = '#cc6600';
+        } else {
+            bodyColor = '#cc3333';
+            armorColor = '#882222';
+        }
 
         ctx.fillStyle = bodyColor;
         ctx.shadowBlur = this.isDetecting ? 15 : 8;
-        ctx.shadowColor = this.isDetecting ? '#ff0000' : '#ff3333';
+        ctx.shadowColor = this.isDetecting ? '#ff0000' : (this.state === 'SUSPICIOUS' ? '#ffaa00' : '#ff3333');
         ctx.beginPath();
         ctx.roundRect(-9, -10, 18, 18, 3);
         ctx.fill();
@@ -1011,15 +1177,42 @@ class RobotAgent {
         ctx.roundRect(-6, 0, 12, 5, 2);
         ctx.fill();
 
-        // Visor/Eye - yellow when patrolling, red when alert
-        ctx.fillStyle = this.isDetecting ? '#ff0000' : '#ffff00';
+        // Visor/Eye - yellow when patrolling, red when alert, orange when suspicious
+        let visorColor;
+        if (this.isDetecting) visorColor = '#ff0000';
+        else if (this.state === 'SUSPICIOUS') visorColor = '#ffaa00';
+        else visorColor = '#ffff00';
+
+        ctx.fillStyle = visorColor;
         ctx.shadowBlur = this.isDetecting ? 20 : 12;
-        ctx.shadowColor = this.isDetecting ? '#ff0000' : '#ffff00';
+        ctx.shadowColor = visorColor;
         ctx.beginPath();
         ctx.roundRect(-5, -14, 10, 4, 2);
         ctx.fill();
 
         ctx.restore();
+
+        // Draw Alert Icon (Question Mark or Exclamation) above robot
+        if (this.state === 'SUSPICIOUS') {
+            ctx.save();
+            ctx.fillStyle = '#ffcc00';
+            ctx.font = 'bold 20px "Roboto Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4;
+            // Draw slightly above the robot
+            ctx.fillText('?', this.x, this.y - 25);
+            ctx.restore();
+        } else if (this.state === 'CHASE') {
+            ctx.save();
+            ctx.fillStyle = '#ff0000';
+            ctx.font = 'bold 24px "Roboto Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4;
+            ctx.fillText('!', this.x, this.y - 25);
+            ctx.restore();
+        }
     }
 }
 
@@ -1080,10 +1273,16 @@ class GamePlay extends AG.Scene {
         this.alarmPlaying = false; // Track alarm state
 
         // 10. Stealth Kill Effects & Loot
-        this.effects = [];        // DisintegrationEffects
+        this.effects = [];        // DisintegrationEffects & Explosions
         this.soundPulses = [];    // SoundPulses for alerting
         this.gems = [];           // DataGems (collectibles)
-        this.bloodSplatters = []; // Floor blood/oil splatters
+        this.leaks = [];          // Active fluid particles
+
+        // Background Puddle Canvas (Baking static leaks for performance)
+        this.puddleCanvas = document.createElement('canvas');
+        this.puddleCanvas.width = this.game.width;
+        this.puddleCanvas.height = this.game.height;
+        this.puddleCtx = this.puddleCanvas.getContext('2d');
 
         // Level System
         if (!this.levelNumber) this.levelNumber = 1;
@@ -1195,10 +1394,16 @@ class GamePlay extends AG.Scene {
             this.isTransitioning = true;
             this.levelNumber++;
 
-            // Save Progress
-            const currentHigh = localStorage.getItem('lastProtocol_highLevel') || 1;
-            if (this.levelNumber > currentHigh) {
+            // Save Progress (Level)
+            const currentHighLevel = parseInt(localStorage.getItem('lastProtocol_highLevel')) || 1;
+            if (this.levelNumber > currentHighLevel) {
                 localStorage.setItem('lastProtocol_highLevel', this.levelNumber);
+            }
+
+            // Save Progress (Score)
+            const currentHighScore = parseInt(localStorage.getItem('lastProtocol_highScore')) || 0;
+            if (this.score > currentHighScore) {
+                localStorage.setItem('lastProtocol_highScore', this.score);
             }
 
             this.showBreachOverlay();
@@ -1232,7 +1437,9 @@ class GamePlay extends AG.Scene {
         this.effects = [];
         this.targetPulses = [];
         this.soundPulses = [];
-        this.bloodSplatters = [];
+        this.leaks = [];
+        // Clear baked puddles
+        this.puddleCtx.clearRect(0, 0, this.puddleCanvas.width, this.puddleCanvas.height);
 
         // Spawn new robots
         this.spawnRobots(this.maxRobots);
@@ -1413,6 +1620,12 @@ class GamePlay extends AG.Scene {
             this.alarmPlaying = false; // Reset alarm flag
         }
 
+        // Heartbeat Logic (Dynamic Intensity) - Plays based on accumulated detection (stress)
+        const dangerLevel = this.detectionTime / this.maxDetectionTime;
+        if (dangerLevel > 0.1 && AG && AG.SFX) { // Start playing at 10% detection
+            AG.SFX.playHeartbeat(dangerLevel);
+        }
+
         // Update target pulses and remove completed ones
         for (const pulse of this.targetPulses) {
             pulse.update(dt);
@@ -1425,11 +1638,18 @@ class GamePlay extends AG.Scene {
         }
         this.effects = this.effects.filter(e => !e.complete);
 
-        // Update blood splatters (slow fade)
-        for (const splatter of this.bloodSplatters) {
-            splatter.update(dt);
+        // Update Leaks & Bake Puddles
+        for (let i = this.leaks.length - 1; i >= 0; i--) {
+            const leak = this.leaks[i];
+            leak.update(dt);
+
+            if (leak.stopped) {
+                // Bake into background canvas
+                leak.render(this.puddleCtx);
+                // Remove from active array
+                this.leaks.splice(i, 1);
+            }
         }
-        this.bloodSplatters = this.bloodSplatters.filter(s => !s.complete);
 
         // Update sound pulses and trigger alerts
         for (const pulse of this.soundPulses) {
@@ -1470,11 +1690,18 @@ class GamePlay extends AG.Scene {
 
     // Execute a stealth kill
     executeSilentKill(robot, index) {
-        // Spawn disintegration effect
+        // Spawn disintegration effect (keep for digital feel)
         this.effects.push(new DisintegrationEffect(robot.x, robot.y));
 
-        // Spawn blood/oil splatter on floor
-        this.bloodSplatters.push(new BloodSplatter(robot.x, robot.y));
+        // Spawn Explosion Effect
+        this.effects.push(new Explosion(robot.x, robot.y));
+
+        // Spawn Fluid Leaks
+        // Randomize type: 70% Oil (Black), 30% Coolant (Cyan)
+        const fluidType = Math.random() > 0.3 ? 'oil' : 'coolant';
+        for (let i = 0; i < 15; i++) {
+            this.leaks.push(new Leak(robot.x, robot.y, fluidType));
+        }
 
         // Camera shake for impact
         this.screenShake = 8;
@@ -1493,12 +1720,26 @@ class GamePlay extends AG.Scene {
         this.robots.splice(index, 1);
         this.score += 45;
         console.log(`Robot eliminated! Score: ${this.score}`);
+
+        // Check for Level Clear
+        if (this.robots.length === 0) {
+            if (AG && AG.SFX) AG.SFX.playWin();
+            // Existing level transition logic usually follows or is polled in update
+            // If explicit logic is missing, we at least have the audio feedback now.
+        }
     }
 
     triggerGameOver() {
         if (AG && AG.SFX) AG.SFX.playDie();
         this.isGameOver = true;
         this.gameOverTimer = 0;
+
+        // Save High Score on Death
+        const currentHighScore = parseInt(localStorage.getItem('lastProtocol_highScore')) || 0;
+        if (this.score > currentHighScore) {
+            localStorage.setItem('lastProtocol_highScore', this.score);
+        }
+
         console.log('CONNECTION TERMINATED - Game Over');
     }
 
@@ -1521,9 +1762,12 @@ class GamePlay extends AG.Scene {
             pulse.render(ctx);
         }
 
-        // 2b. Draw Blood Splatters (on floor, persists after kills)
-        for (const splatter of this.bloodSplatters) {
-            splatter.render(ctx);
+        // 2b. Draw Baked Puddles (Background Canvas)
+        ctx.drawImage(this.puddleCanvas, 0, 0);
+
+        // 2c. Draw Active Leaks (Flying particles)
+        for (const leak of this.leaks) {
+            leak.render(ctx);
         }
 
         // 3. Draw Sound Pulses
