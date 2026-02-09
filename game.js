@@ -41,6 +41,7 @@ class Assassin {
     // Trigger assassination lunge
     lungeAt(targetRobot) {
         this.target = targetRobot;
+        if (AG && AG.SFX) AG.SFX.playDash();
         this.state = 'ASSASSINATING';
         this.path = []; // Ignore pathfinding, go straight
     }
@@ -49,6 +50,7 @@ class Assassin {
         if (this.state === 'DEAD') return;
 
         const dtSec = dt / 1000;
+        this.isMoving = (this.state !== 'IDLE');
 
         // --- STATE BEHAVIOR ---
 
@@ -168,6 +170,7 @@ class Assassin {
                     this.footstepTimer = 0;
                     if (this.scene && this.scene.effects) {
                         this.scene.effects.push(new FootstepRing(this.x, this.y));
+                        if (AG && AG.SFX) AG.SFX.playStep();
                     }
                 }
             }
@@ -201,46 +204,101 @@ class Assassin {
     render(ctx) {
         ctx.save();
         ctx.translate(this.x, this.y);
+        // Rotate based on player facing angle.
+        // Adjusting by Math.PI/2 to align with the enemy's orientation standard (0 deg = facing right)
         ctx.rotate(this.angle + Math.PI / 2);
 
-        // IDLE BREATHING ANIMATION
-        const breathe = this.state === 'IDLE' ? Math.sin(Date.now() / 200) * 0.5 : 0;
+        // --- Animation State ---
+        // Use isMoving flag to trigger leg wiggle. Faster wiggle than enemy for agility feel.
+        const legOffset = this.isMoving ? Math.sin(Date.now() / 80) * 4 : 0;
 
-        // 1. FOOTSTEP RIPPLES (Visualized noise) handled by separate class
-        // (Shadow removed per user request)
-
-        // 2. THE HOOD (Shoulders/Cape)
-        // Vibrant Red/Orange for high contrast
-        ctx.fillStyle = '#FF3300';
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#FF3300';
-
+        // --- Shadow beneath (Shared style) ---
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.beginPath();
-        // V-shape silhouette for "Predator" look
-        ctx.moveTo(0, -12); // Front tip (Head)
-        ctx.lineTo(11, 8);  // Right shoulder
-        ctx.lineTo(0, 4);   // Back notch
-        ctx.lineTo(-11, 8); // Left shoulder
-        ctx.closePath();
+        // Slightly larger shadow for the player
+        ctx.ellipse(2, 2, 12, 8, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. DIRECTIONAL INDICATOR (Arrow)
-        // Helps player know exactly where they will strike
-        ctx.fillStyle = '#FFFFFF';
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = '#FFFFFF';
-        ctx.beginPath();
-        ctx.moveTo(0, -18);
-        ctx.lineTo(4, -8);
-        ctx.lineTo(-4, -8);
-        ctx.closePath();
-        ctx.fill();
-
-        // 4. CENTER MASS (Darker tactical vest)
-        ctx.fillStyle = '#661100';
+        // --- Legs (Dark tech-suit undertone) ---
+        ctx.fillStyle = '#445566'; // Dark blue-grey instead of plain dark grey
         ctx.shadowBlur = 0;
+        // Left leg
         ctx.beginPath();
-        ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        ctx.roundRect(-7, 4 + legOffset, 6, 12, 3); // Slightly rounder legs than enemy
+        ctx.fill();
+        // Right leg
+        ctx.beginPath();
+        ctx.roundRect(1, 4 - legOffset, 6, 12, 3);
+        ctx.fill();
+
+
+        // --- Main Armor Theme Colors ---
+        const primaryArmor = '#0088bb'; // Medium Blue
+        const highlightArmor = '#00bbff'; // Cyan/Sky Blue
+        const glowColor = '#00ffff';    // Bright Cyan Glow
+
+        // --- Torso / Body Armor ---
+        ctx.fillStyle = primaryArmor;
+        // Player always has a healthy glow
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = glowColor;
+        ctx.beginPath();
+        // Torso: Slightly tapered shape, less blocky than enemy
+        ctx.moveTo(-9, -11);
+        ctx.lineTo(9, -11);
+        ctx.lineTo(7, 8);
+        ctx.lineTo(-7, 8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Chest Plate Detail
+        ctx.fillStyle = highlightArmor;
+        ctx.shadowBlur = 5; // Subtle glow on detail
+        ctx.beginPath();
+        ctx.roundRect(-6, -8, 12, 7, 2);
+        ctx.fill();
+
+
+        // --- Arms/Weaponry (Distinct feature vs Enemy) ---
+        ctx.fillStyle = '#445566'; // Tech-suit color
+        ctx.shadowBlur = 0;
+
+        // Left Arm (Holding steady)
+        ctx.beginPath();
+        ctx.roundRect(-12, -8, 4, 12, 2);
+        ctx.fill();
+
+        // Right Arm (Weapon Arm - extended slightly)
+        ctx.beginPath();
+        ctx.roundRect(8, -8, 4, 16, 2);
+        ctx.fill();
+
+        // Weapon Muzzle Glow
+        ctx.fillStyle = glowColor;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = glowColor;
+        ctx.beginPath();
+        ctx.rect(8.5, 8, 3, 3);
+        ctx.fill();
+
+
+        // --- Helmet / Head ---
+        ctx.fillStyle = primaryArmor;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = glowColor;
+        ctx.beginPath();
+        // Rounded helmet distinct from enemy's flat top
+        ctx.arc(0, -13, 7, Math.PI, 0); // Top half circle
+        ctx.lineTo(7, -10);
+        ctx.lineTo(-7, -10);
+        ctx.fill();
+
+        // Visor (Bright glowing eyes)
+        ctx.fillStyle = '#e0ffff'; // Almost white cyan
+        ctx.shadowBlur = 18; // Intense glow
+        ctx.shadowColor = glowColor;
+        ctx.beginPath();
+        ctx.roundRect(-5, -15, 10, 3, 1.5);
         ctx.fill();
 
         ctx.restore();
@@ -374,6 +432,7 @@ class TargetPulse {
 // ============================================
 class DisintegrationEffect {
     constructor(x, y) {
+        if (AG && AG.SFX) AG.SFX.playKill();
         this.x = x;
         this.y = y;
         this.particles = [];
@@ -742,6 +801,7 @@ class RobotAgent {
 
         if (this.isDetecting) {
             // ALERT: Stop and track player
+            if (this.state !== 'ALERT' && AG && AG.SFX) AG.SFX.playAlert();
             this.state = 'ALERT';
             this.angle = Math.atan2(player.y - this.y, player.x - this.x);
             this.path = []; // Clear patrol path
@@ -1061,6 +1121,7 @@ class GamePlay extends AG.Scene {
 
         // Resume audio context on user interaction (persist until success)
         const resumeAudio = () => {
+            if (AG && AG.SFX) AG.SFX.init();
             if (this.music.audio.paused) {
                 this.music.play();
             }
@@ -1340,12 +1401,8 @@ class GamePlay extends AG.Scene {
 
             // Play alarm sound if not already playing
             if (!this.alarmPlaying) {
-                const alarm = document.getElementById('alarmSound');
-                if (alarm) {
-                    alarm.currentTime = 0;
-                    alarm.play().catch(() => { });
-                    this.alarmPlaying = true;
-                }
+                if (AG && AG.SFX) AG.SFX.playAlert();
+                this.alarmPlaying = true;
             }
 
         } else {
@@ -1387,11 +1444,7 @@ class GamePlay extends AG.Scene {
             if (gem.collected) {
                 this.score += gem.value;
                 // Play collect sound
-                const chime = document.getElementById('collectSound');
-                if (chime) {
-                    chime.currentTime = 0;
-                    chime.play().catch(() => { });
-                }
+                if (AG && AG.SFX) AG.SFX.playCollect();
             }
         }
         this.gems = this.gems.filter(g => !g.collected);
@@ -1443,6 +1496,7 @@ class GamePlay extends AG.Scene {
     }
 
     triggerGameOver() {
+        if (AG && AG.SFX) AG.SFX.playDie();
         this.isGameOver = true;
         this.gameOverTimer = 0;
         console.log('CONNECTION TERMINATED - Game Over');
