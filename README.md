@@ -1,182 +1,251 @@
-# LAST PROTOCOL - Command Interface
+# 🎮 LAST PROTOCOL
 
-## 🎮 Overview
-**Last Protocol** is a cyber-themed game with a terminal/command aesthetic. This is Step 1: The main menu "Command Interface" that sets the atmospheric tone for a world where humanity is on the brink.
+<div align="center">
 
-## 🎨 Visual Design
+![Last Protocol Banner](https://img.shields.io/badge/LAST_PROTOCOL-SYSTEM_OVERRIDE_ACTIVE-00FFCC?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiA3TDEyIDEyTDIyIDdMMTIgMloiIHN0cm9rZT0iIzAwRkZDQyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTIgMTdMMTIgMjJMMjIgMTciIHN0cm9rZT0iIzAwRkZDQyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTIgMTJMMTIgMTdMMjIgMTIiIHN0cm9rZT0iIzAwRkZDQyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+)
 
-### Color Palette
-- **Background**: `#050505` - Deep space black
-- **Primary UI**: `#00FFCC` - Cyber neon cyan
-- **Alert/Hover**: `#FF0055` - Hot pink
-- **Secondary**: `#FFB800` - Amber
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 
-### Aesthetic Features
-- ✨ **Scanline Effect**: CRT monitor simulation
-- 🌊 **Noise Overlay**: Static-filled background
-- ⚡ **Glitch Effects**: Title with RGB split animation
-- 💫 **Neon Glow**: Text shadows and box shadows
-- 🔥 **Flicker Animation**: Periodic title flicker
-- 🎯 **Hover States**: Dynamic button interactions
+**A cyberpunk stealth-action game where you infiltrate robot-controlled facilities as humanity's last hope**
 
-## 🚀 Features Implemented
+[Play Demo](#-quick-start) • [Features](#-features) • [Controls](#-controls) • [Development](#-development)
 
-### 1. Boot Sequence
-- Scrolling terminal-style initialization messages
-- System override narrative
-- Automatic transition to main menu
+</div>
 
-### 2. Main Menu
-- **INITIATE MISSION** - Start the game
-- **ARCHIVED DATA (SCORES)** - View high scores
-- **SYSTEM CONFIGURATION** - Settings panel
-- **TERMINATE SESSION** - Exit
+---
 
-### 3. Interactive Elements
-- Hover effects with color changes
-- Sound effects on interaction (when audio files are added)
-- Keyboard navigation (Arrow keys + Enter)
-- Real-time system clock
+## 📖 Story
 
-### 4. Status Bar
-- Online status indicator
-- Security status (compromised)
-- Live system time
+> *In a world where robots have seized control, humanity's survival hangs by a thread. You are the last operative capable of executing Protocol 00 - a desperate mission to infiltrate the robot security mainframe. Navigate through heavily patrolled facilities, eliminate threats silently, and breach each security layer before time runs out.*
+
+The interface you see is your compromised command terminal - glitching, unstable, but operational. Every level brings you deeper into the system. **Will you complete the Last Protocol?**
+
+## ✨ Features
+
+### 🎯 Core Gameplay
+- **Stealth Mechanics** - Navigate through procedurally generated mazes while avoiding detection
+- **Advanced AI** - Robots with patrol, chase, and suspicion states that investigate sounds
+- **Assassination System** - Execute silent takedowns with precise timing
+- **Progressive Difficulty** - Each level increases enemy count and complexity
+- **Sound-Based Detection** - Footsteps and kills create noise that alerts nearby robots
+
+### 🎨 Visual Excellence
+- **Cyberpunk Aesthetic** - Neon colors, CRT scanlines, and glitch effects
+- **Particle Systems** - Disintegration effects, ghost trails, and visual feedback
+- **Dynamic Lighting** - Atmospheric rendering with shadows and glows
+- **Smooth Animations** - 60 FPS gameplay with hardware-accelerated rendering
+
+### 🔊 Audio Design
+- **Procedural Sound Effects** - Web Audio API-powered industrial-tech sounds
+- **Ambient Soundtrack** - Atmospheric background music
+- **Spatial Audio** - Directional sound cues for robot alerts and footsteps
+- **UI Feedback** - Click, hover, and selection sounds
+
+### 🎮 Game Systems
+- **Pathfinding AI** - A* algorithm for intelligent robot navigation
+- **Level Progression** - Save system with high score tracking
+- **Responsive Controls** - Arrow keys + mouse/click movement
+- **Boot Sequence** - Immersive terminal-style intro animation
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Node.js (optional, for local development server)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/BinaryxBeast/Last-Protocol.git
+   cd Last-Protocol
+   ```
+
+2. **Install dependencies** (optional)
+   ```bash
+   npm install
+   ```
+
+3. **Run the game**
+   
+   **Option A: Using npm**
+   ```bash
+   npm start
+   ```
+   
+   **Option B: Using Python**
+   ```bash
+   python3 -m http.server 8000
+   ```
+   
+   **Option C: Using any static server**
+   ```bash
+   npx serve
+   ```
+
+4. **Open in browser**
+   ```
+   http://localhost:8000
+   ```
+
+## 🎮 Controls
+
+### Menu Navigation
+- **Mouse** - Click menu buttons
+- **Arrow Keys** (↑/↓) - Navigate menu options
+- **Enter** - Select highlighted option
+
+### Gameplay
+- **Arrow Keys** - Move character (WASD alternative)
+- **Mouse Click** - Set movement destination
+- **Space** - Dash/Sprint (when implemented)
+- **ESC** - Pause menu
+
+### Tips
+- 🔇 **Stay Silent** - Running creates noise that alerts robots
+- 👁️ **Watch Patrol Patterns** - Study robot movements before acting
+- ⚡ **Strike Fast** - Assassinate robots before they can alert others
+- 🎯 **Plan Your Route** - Use the maze layout to avoid detection
 
 ## 📁 Project Structure
 
 ```
-Last Protocol/
+Last-Protocol/
 ├── index.html          # Main HTML structure
-├── styles.css          # Cyber-themed styling
-├── script.js           # Interactive functionality
+├── styles.css          # Cyberpunk-themed styling
+├── script.js           # Menu and UI logic
+├── engine.js           # Custom game engine (rendering, input, audio)
+├── game.js             # Game logic, AI, and entities
 ├── assets/             # Audio and media files
-│   ├── ambient.mp3     # Background ambient loop
-│   ├── click.mp3       # Button hover sound
-│   └── select.mp3      # Button click sound
+│   ├── music.wav       # Background music
+│   └── AUDIO_README.md # Audio implementation notes
+├── lib/                # Third-party libraries
+│   └── easystar.js     # A* pathfinding library
 └── README.md           # This file
 ```
 
-## 🔊 Audio Requirements
+## 🛠️ Technical Details
 
-To complete the atmospheric experience, add these audio files to the `assets/` folder:
+### Technologies
+- **Vanilla JavaScript** - No frameworks, pure ES6+
+- **HTML5 Canvas** - Hardware-accelerated 2D rendering
+- **Web Audio API** - Procedural sound generation
+- **CSS3 Animations** - UI effects and transitions
+- **LocalStorage** - Save game and high score persistence
 
-1. **ambient.mp3** - Low hum ambient loop (dark, mechanical)
-2. **click.mp3** - Mechanical click for button hover
-3. **select.mp3** - Confirmation sound for button selection
+### Architecture
+- **Custom Game Engine** (`engine.js`)
+  - `AG.Renderer` - Canvas rendering system
+  - `AG.Input` - Keyboard and mouse handling
+  - `AG.SFX` - Procedural audio engine
+  - `AG.Audio` - Music playback manager
 
-### Recommended Sources for Audio:
-- [Freesound.org](https://freesound.org/) - Search for "sci-fi ambient", "mechanical click"
-- [Zapsplat.com](https://www.zapsplat.com/) - Free sound effects
-- Generate with AI: Use tools like ElevenLabs or similar
+- **Game Systems** (`game.js`)
+  - `Assassin` - Player character with pathfinding
+  - `Robot` - AI enemies with state machines
+  - `Maze` - Procedural level generation
+  - `Particle Systems` - Visual effects
 
-## 🎯 How to Run
-
-1. **Open the project**:
-   ```bash
-   cd "/home/binaryxbeast/Documents/Last Protocol"
-   ```
-
-2. **Start a local server**:
-   ```bash
-   # Using Python 3
-   python3 -m http.server 8000
-   
-   # OR using Node.js
-   npx serve
-   ```
-
-3. **Open in browser**:
-   Navigate to `http://localhost:8000`
-
-## ⌨️ Controls
-
-- **Mouse**: Click menu buttons
-- **Keyboard**: 
-  - `↑/↓` Arrow keys to navigate
-  - `Enter` to select
-  - Works on focused buttons
+### Performance
+- ⚡ **60 FPS** target with delta-time updates
+- 🎨 **Hardware acceleration** via CSS transforms
+- 💾 **Lightweight** - No external dependencies (except pathfinding)
+- 📱 **Responsive** - Adapts to different screen sizes
 
 ## 🎨 Customization
 
-### Adjust Colors
+### Color Palette
 Edit CSS variables in `styles.css`:
 ```css
 :root {
-    --bg-dark: #050505;
-    --cyber-cyan: #00FFCC;
-    --alert-pink: #FF0055;
-    --amber: #FFB800;
+    --bg-dark: #050505;        /* Deep space black */
+    --cyber-cyan: #00FFCC;     /* Neon cyan */
+    --alert-pink: #FF0055;     /* Hot pink */
+    --amber: #FFB800;          /* Warning amber */
 }
 ```
 
-### Modify Boot Sequence
-Edit the `bootMessages` array in `script.js`:
+### Difficulty Settings
+Modify game parameters in `game.js`:
 ```javascript
-const bootMessages = [
-    "YOUR CUSTOM MESSAGE...",
-    // Add more lines
-];
+// Adjust robot count per level
+const robotCount = 2 + Math.floor(level * 1.5);
+
+// Change player speed
+this.maxSpeed = 120; // pixels per second
+
+// Modify detection range
+this.visionRange = 150; // pixels
 ```
 
-### Change Animation Speed
-Adjust timing in `script.js`:
+### Audio Configuration
+Customize sound effects in `engine.js`:
 ```javascript
-}, 150); // Boot text speed (milliseconds)
+AG.SFX = {
+    playFootstep() { /* Modify frequency and duration */ },
+    playDash() { /* Adjust sound characteristics */ },
+    playAlert() { /* Change alert sound */ }
+};
 ```
 
-## 📱 Responsive Design
+## 🔮 Roadmap
 
-The interface adapts to different screen sizes:
-- Desktop: Full experience with large title
-- Mobile: Optimized layout with smaller fonts
-- Status bar adjusts to vertical layout on small screens
+### Planned Features
+- [ ] **Power-ups** - Temporary invisibility, speed boost, EMP blast
+- [ ] **Multiple Levels** - Unique maze layouts and themes
+- [ ] **Boss Encounters** - Special robot types with unique behaviors
+- [ ] **Achievements** - Unlock rewards for completing challenges
+- [ ] **Leaderboards** - Online high score tracking
+- [ ] **Mobile Support** - Touch controls and responsive UI
+- [ ] **Level Editor** - Create and share custom levels
 
-## 🔮 Next Steps (Future Implementation)
+### Known Issues
+- Audio autoplay may be blocked by browsers (click to enable)
+- Mobile touch controls not yet implemented
+- Save system uses localStorage (not cross-device)
 
-### Step 2: Game Scene
-- Pathfinding/maze mechanics
-- Player character implementation
-- Enemy AI (robots)
+## 🤝 Contributing
 
-### Step 3: Enhanced Features
-- High score persistence (localStorage)
-- Settings panel (volume, difficulty)
-- Multiple game modes
-- Achievements system
+Contributions are welcome! Here's how you can help:
 
-## 🛠️ Technical Details
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to the branch** (`git push origin feature/AmazingFeature`)
+5. **Open a Pull Request**
 
-### Technologies Used
-- **HTML5** - Structure
-- **CSS3** - Styling with animations
-- **Vanilla JavaScript** - No frameworks
-- **Google Fonts** - Roboto Mono
+### Development Guidelines
+- Follow existing code style (ES6+, 4-space indentation)
+- Test on multiple browsers before submitting
+- Update documentation for new features
+- Keep performance in mind (60 FPS target)
 
-### Browser Compatibility
-- Chrome/Edge: ✅ Full support
-- Firefox: ✅ Full support
-- Safari: ✅ Full support
-- Mobile browsers: ✅ Responsive
+## 📄 License
 
-### Performance
-- Lightweight: No external dependencies
-- CSS animations: Hardware accelerated
-- Optimized for 60fps
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📝 Notes
+## 🙏 Acknowledgments
 
-- Audio autoplay may be blocked by browsers - click anywhere to enable
-- The game scene (Step 2) is not yet implemented
-- Placeholder alerts show for incomplete features
+- **EasyStar.js** - A* pathfinding library
+- **Google Fonts** - Roboto Mono typeface
+- **Web Audio API** - Procedural sound generation
+- **Antigravity Principles** - High-performance rendering techniques
 
-## 🎮 The Story
+## 📧 Contact
 
-> In a world where robots have taken control, humanity's last hope lies in Protocol 00. You are the commander tasked with infiltrating the robot security mainframe and executing the final mission. The interface you see is your command terminal - compromised, glitching, but operational. Time is running out. Will you initiate the mission?
+**BinaryxBeast** - [@BinaryxBeast](https://github.com/BinaryxBeast)
+
+Project Link: [https://github.com/BinaryxBeast/Last-Protocol](https://github.com/BinaryxBeast/Last-Protocol)
 
 ---
 
-**Status**: ✅ Step 1 Complete - Command Interface Ready
-**Next**: Step 2 - Game Implementation
+<div align="center">
 
-*Built with Antigravity principles - High-performance rendering for terminal aesthetics*
+**⚡ Built with passion for cyberpunk aesthetics and stealth gameplay ⚡**
+
+*SYSTEM STATUS: ONLINE • SECURITY: COMPROMISED • PROTOCOL: ACTIVE*
+
+</div>
